@@ -199,6 +199,13 @@ Square *AvailablePosn (Stockfish::Position &pos) {
     }
     return availableSq;
 } 
+
+Value getVal (Stockfish::Position &pos, const Eval::NNUE::Networks& networks) {
+    Value v = networks.big.evaluate(pos,false);
+    v = UCI::to_cp(v,pos);
+    return v;
+}
+
 std::pair<Move,Value> makeOneMove (Stockfish::Position &pos, Stockfish::StateListPtr &states, Square fromSq,const Eval::NNUE::Networks& networks) { 
     
     Square *t = AvailablePosn(pos);
@@ -215,7 +222,7 @@ std::pair<Move,Value> makeOneMove (Stockfish::Position &pos, Stockfish::StateLis
 
         // sync_cout << "\n" << Eval::trace(pos, networks) << sync_endl;        
         // std::cout<<"move completed\n";
-        Value newEval = Eval::evaluate(networks,pos,0);
+        Value newEval = getVal(pos,networks);
         // std::cout<<"move completed345\n";
         if (newEval > checkVal) {
             checkVal = newEval;
@@ -245,7 +252,9 @@ std::pair <Move,Value> makeFinalMove (Stockfish::Position &pos, Stockfish::State
             // std::cout<<"ha yes\n";
             std::pair<Move,Value> thisSq = makeOneMove(pos,states,fromSq[i],networks);
             // std::cout<<"return successful\n";
+            // std::cout<<"best val so far is "<<thisSq.second<<"\n";
             if (thisSq.second > bestVal) {
+                
                 bestVal = thisSq.second;
                 bestMove = thisSq.first;
             }
@@ -320,7 +329,7 @@ std::pair <Move,std::pair<Move,Value>> makeSemiFinalMove (Stockfish::Position &p
 }
 std::pair <Move,std::pair<Move,std::pair<Move,Value>>> makeQuarterFinalMove (Stockfish::Position &pos, Stockfish::StateListPtr &states, Square fromSq[],const Eval::NNUE::Networks& networks) {
     Move bestMove[3];
-    // std::cout<<"entered second move\n";
+    std::cout<<"entered second move\n";
     Value bestVal = 0;
     for (int i=0; i<7; i++) {
         if (fromSq[i] == -1) {
@@ -374,6 +383,7 @@ std::pair <Move,std::pair<Move,std::pair<Move,Value>>> makeQuarterFinalMove (Sto
 
             }
             if (bestEvalForPiece > bestVal) {
+                std::cout<<"best eval so far is "<<bestEvalForPiece<<"\n";
                 bestVal = bestEvalForPiece;
                 bestMove[0] = quarterFinal;
                 bestMove[1] = semiFinal;
@@ -388,7 +398,7 @@ std::pair <Move,std::pair<Move,std::pair<Move,Value>>> makeQuarterFinalMove (Sto
 
 std::pair<Move,std::pair <Move,std::pair<Move,std::pair<Move,Value>>>> makeFirstMove (Stockfish::Position &pos, Stockfish::StateListPtr &states, Square fromSq[],const Eval::NNUE::Networks& networks) {
     Move bestMove[4];
-    // std::cout<<"entered first move\n";
+    std::cout<<"entered first move\n";
     Value bestVal = 0;
     for (int i=0; i<7; i++) {
         if (fromSq[i] == -1) {
@@ -469,14 +479,14 @@ void UCI::cs433_project(Stockfish::Position &pos, Stockfish::StateListPtr &state
     */
     Square fromSq [7] = {SQ_A1,SQ_B1,SQ_C1,SQ_D1,SQ_F1,SQ_G1,SQ_H1};
 //    trace_eval(pos);
-    std::cout<<"current evaluation is "<<Eval::evaluate(networks,pos,0)<<"\n";
+    std::cout<<"current evaluation is "<<0.01 * getVal(pos,networks)<<"\n";
     std::pair<Move,std::pair<Move,std::pair<Move,std::pair<Move,Value>>>> finalSet = makeFirstMove(pos,states,fromSq,networks);
     StateInfo *t = new StateInfo[8];
     pos.move433(finalSet.first,t[0]);
     pos.move433(finalSet.second.first,t[1]);
     pos.move433(finalSet.second.second.first,t[2]);
     pos.move433(finalSet.second.second.second.first,t[3]);
-    std::cout<<"Now evaluation is "<<Eval::evaluate(networks,pos,0)<<"\n";
+    std::cout<<"Now evaluation is "<<0.01*getVal(pos,networks)<<"\n";
     trace_eval(pos);
     //compute relevant board configuration where 4 pieces are relocated, by performing a state space search over the staring board configuration
 
@@ -732,7 +742,7 @@ std::string UCI::move(Move m, bool chess960) {
     if (m.type_of() == CASTLING && !chess960)
         to = make_square(to > from ? FILE_G : FILE_C, rank_of(from));
 
-    std::string move = square(from) + square(to);
+    std::string move = square(from) + square(to);       
 
     if (m.type_of() == PROMOTION)
         move += " pnbrqk"[m.promotion_type()];
