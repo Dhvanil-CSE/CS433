@@ -329,7 +329,7 @@ std::pair <Move,std::pair<Move,Value>> makeSemiFinalMove (Stockfish::Position &p
 }
 std::pair <Move,std::pair<Move,std::pair<Move,Value>>> makeQuarterFinalMove (Stockfish::Position &pos, Stockfish::StateListPtr &states, Square fromSq[],const Eval::NNUE::Networks& networks) {
     Move bestMove[3];
-    std::cout<<"entered second move\n";
+    // std::cout<<"entered second move\n";
     Value bestVal = 0;
     for (int i=0; i<7; i++) {
         if (fromSq[i] == -1) {
@@ -383,7 +383,7 @@ std::pair <Move,std::pair<Move,std::pair<Move,Value>>> makeQuarterFinalMove (Sto
 
             }
             if (bestEvalForPiece > bestVal) {
-                std::cout<<"best eval so far is "<<bestEvalForPiece<<"\n";
+                // std::cout<<"best eval so far is "<<bestEvalForPiece<<"\n";
                 bestVal = bestEvalForPiece;
                 bestMove[0] = quarterFinal;
                 bestMove[1] = semiFinal;
@@ -398,7 +398,7 @@ std::pair <Move,std::pair<Move,std::pair<Move,Value>>> makeQuarterFinalMove (Sto
 
 std::pair<Move,std::pair <Move,std::pair<Move,std::pair<Move,Value>>>> makeFirstMove (Stockfish::Position &pos, Stockfish::StateListPtr &states, Square fromSq[],const Eval::NNUE::Networks& networks) {
     Move bestMove[4];
-    std::cout<<"entered first move\n";
+    // std::cout<<"entered first move\n";
     Value bestVal = 0;
     for (int i=0; i<7; i++) {
         if (fromSq[i] == -1) {
